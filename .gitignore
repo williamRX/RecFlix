@@ -1,0 +1,27 @@
+# Variables d'environnement et secrets
+.env
+
+# Données (Ne jamais versionner les datasets volumineux)
+data/
+
+# Fichiers compilés Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environnements virtuels
+venv/
+env/
+.venv/
+
+# Fichiers système MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Logs
+*.log

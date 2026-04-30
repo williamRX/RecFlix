@@ -1,0 +1,20 @@
+# RecFlix Project Dependencies
+
+# Data Manipulation
+pandas
+numpy
+pyarrow  # Pour le format Parquet
+fastparquet
+
+# Machine Learning
+scikit-learn
+scipy
+
+# API
+fastapi
+uvicorn
+
+# Utility
+requests
+tqdm
+python-dotenv
