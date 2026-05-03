@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecFlix - Univers 2D</title>
+    <!-- Chargement de Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --glass-bg: rgba(25, 28, 36, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-color: #e2e8f0;
+            --accent: #10b981; /* Un accent vert pour différencier de la 3D */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Panneau Glassmorphism */
+        .glass-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            z-index: 10;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #34d399, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #94a3b8;
+        }
+
+        #plot-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div style="font-weight: 500; letter-spacing: 1px;">Calcul du Planisphère...</div>
+    </div>
+
+    <div class="glass-panel" id="panel" class="hidden">
+        <h1>RecFlix Map (2D)</h1>
+        <p>Projection à plat des vecteurs latents des films.</p>
+        <p><strong>Interactions :</strong></p>
+        <ul style="color: #94a3b8; font-size: 0.85rem; padding-left: 20px;">
+            <li>Clic + Glisser : <strong>Déplacer</strong></li>
+            <li>Double-clic : <strong>Réinitialiser</strong></li>
+            <li>Survoler : <strong>Voir le titre</strong></li>
+        </ul>
+        <div style="margin-top: 20px; font-size: 0.8rem; color: #475569;">
+            <span id="movie-count">0</span> films chargés.
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <input type="text" id="search-input" placeholder="Chercher un film (ex: Matrix)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white; margin-bottom: 8px;">
+            <button onclick="searchMovie()" style="width: 100%; padding: 8px; background-color: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                Rechercher & Zoomer
+            </button>
+            <div id="search-result" style="margin-top: 8px; font-size: 0.8rem; color: #ef4444;"></div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="index.html" style="display: inline-block; padding: 10px 15px; background-color: var(--accent); color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: background 0.3s;">
+                Basculer en Vue 3D
+            </a>
+        </div>
+    </div>
+
+    <div id="plot-container"></div>
+
+    <script>
+        let allPoints = []; // Pour garder en mémoire globale
+        let baseTrace = null;
+
+        async function loadMap() {
+            try {
+                // Fetch the 2D map data from FastAPI
+                const response = await fetch('/api/map2d');
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des données');
+                }
+                const data = await response.json();
+                allPoints = data.points; // Sauvegarde globale
+
+                document.getElementById('movie-count').innerText = allPoints.length;
+
+                // Prepare arrays for Plotly
+                const x = [];
+                const y = [];
+                const text = [];
+                const color = [];
+
+                allPoints.forEach((p, i) => {
+                    x.push(p.x);
+                    y.push(p.y);
+                    text.push(`<b>${p.title}</b><br>ID: ${p.movieId}`);
+                    // Création d'une couleur arbitraire basée sur la position pour l'esthétique
+                    color.push(Math.sqrt(p.x*p.x + p.y*p.y)); 
+                });
+
+                const trace = {
+                    x: x,
+                    y: y,
+                    mode: 'markers',
+                    marker: {
+                        size: 4,
+                        color: color,
+                        colorscale: 'Plasma', 
+                        opacity: 0.6,
+                        line: {
+                            width: 0
+                        }
+                    },
+                    text: text,
+                    hoverinfo: 'text',
+                    type: 'scattergl' // Utilisation de WebGL pour de meilleures performances sur la 2D massive
+                };
+                
+                baseTrace = trace;
+
+                const layout = {
+                    margin: { l: 0, r: 0, b: 0, t: 0 },
+                    paper_bgcolor: '#0f1115', // Fond de la page
+                    plot_bgcolor: '#0f1115',  // Fond du graphique
+                    xaxis: { showgrid: false, zeroline: false, showticklabels: false },
+                    yaxis: { showgrid: false, zeroline: false, showticklabels: false },
+                    hovermode: 'closest'
+                };
+
+                Plotly.newPlot('plot-container', [trace], layout, {responsive: true, scrollZoom: true});
+
+                // Hide loader and show panel
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('panel').classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Erreur:", error);
+                document.getElementById('loader').innerHTML = `<div style="color: #ef4444;">Échec du chargement de la carte 2D.</div>`;
+            }
+        }
+
+        // Fonction de recherche
+        function searchMovie() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.innerText = "";
+            resultDiv.style.color = "#ef4444";
+
+            if (!query) return;
+
+            // 1. Trouver le film
+            const target = allPoints.find(p => p.title.toLowerCase().includes(query));
+
+            if (!target) {
+                resultDiv.innerText = "Film introuvable.";
+                return;
+            }
+
+            resultDiv.style.color = "#10b981";
+            resultDiv.innerText = `Cible: ${target.title}`;
+
+            // 2. Calculer les distances Euclidiennes en 2D
+            const distances = allPoints.map(p => {
+                return {
+                    point: p,
+                    dist: Math.sqrt(Math.pow(p.x - target.x, 2) + Math.pow(p.y - target.y, 2))
+                };
+            });
+
+            // 3. Trier par distance et prendre les 6 premiers (la cible + les 5 plus proches)
+            distances.sort((a, b) => a.dist - b.dist);
+            const closest = distances.slice(0, 6).map(d => d.point);
+
+            // 4. Mettre en évidence (Ajout d'une nouvelle trace rouge/jaune par dessus)
+            const highlightTrace = {
+                x: closest.map(p => p.x),
+                y: closest.map(p => p.y),
+                mode: 'markers+text',
+                marker: {
+                    size: [12, 8, 8, 8, 8, 8], // Cible plus grosse
+                    color: ['#ef4444', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b'], // Rouge cible, orange voisins
+                    line: { width: 2, color: 'white' }
+                },
+                text: closest.map(p => p.title),
+                textposition: 'top center',
+                textfont: { color: 'white', size: 10 },
+                hoverinfo: 'text',
+                type: 'scattergl'
+            };
+
+            // 5. Mettre à jour le graphique et zoomer
+            // On centre parfaitement sur la cible avec une marge pour voir les voisins
+            const maxDistX = Math.max(...closest.map(p => Math.abs(p.x - target.x)));
+            const maxDistY = Math.max(...closest.map(p => Math.abs(p.y - target.y)));
+            const zoomPadding = Math.max(1.5, Math.max(maxDistX, maxDistY) * 1.5);
+
+            const updateLayout = {
+                'xaxis.range': [target.x - zoomPadding, target.x + zoomPadding],
+                'yaxis.range': [target.y - zoomPadding, target.y + zoomPadding]
+            };
+
+            // On redessine avec la trace de base + la trace de highlight
+            Plotly.react('plot-container', [baseTrace, highlightTrace], Object.assign(document.getElementById('plot-container').layout, updateLayout));
+        }
+
+        // Permet de valider avec Entrée
+        document.getElementById('search-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                searchMovie();
+            }
+        });
+
+        // Start loading when page is ready
+        document.addEventListener("DOMContentLoaded", loadMap);
+    </script>
+</body>
+</html>
