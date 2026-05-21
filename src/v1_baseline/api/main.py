@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 import logging
 
-from src.inference.recommender import ProfileRecommender
+from src.v1_baseline.inference.recommender import ProfileRecommender
 
 # Configuration
 logging.basicConfig(level=logging.INFO)
@@ -36,7 +36,7 @@ def startup_event():
         recommender = ProfileRecommender()
         
         # Chargement en cache de la carte 3D
-        project_root = Path(__file__).resolve().parents[2]
+        project_root = Path(__file__).resolve().parents[3]
         map_path = project_root / "data" / "processed" / "movies_3d_map.parquet"
         if map_path.exists():
             df_map = pd.read_parquet(map_path)

@@ -23,7 +23,7 @@ WEIGHT_OVERVIEW = 1.0
 WEIGHT_DECADE = 0.5
 
 # Chemins
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 RAW_DIR = PROJECT_ROOT / "data" / "raw" / "ml-latest-small"
 PROC_DIR = PROJECT_ROOT / "data" / "processed"
 

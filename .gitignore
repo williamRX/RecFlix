@@ -25,3 +25,20 @@ env/
 
 # Logs
 *.log
+
+# Modèles entraînés et checkpoints
+models/
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# Configurations d'IDE
+.vscode/
+.idea/
+
+# Caches de test et couverture Python
+.pytest_cache/
+.coverage
+htmlcov/
+

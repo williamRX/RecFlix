@@ -18,7 +18,7 @@ class ProfileRecommender:
     def __init__(self, data_dir: str = None):
         if data_dir is None:
             # Par défaut, on pointe vers le dossier processed du projet
-            self.data_dir = Path(__file__).resolve().parents[2] / "data" / "processed"
+            self.data_dir = Path(__file__).resolve().parents[3] / "data" / "processed"
         else:
             self.data_dir = Path(data_dir)
             

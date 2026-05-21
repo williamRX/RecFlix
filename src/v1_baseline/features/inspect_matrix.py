@@ -2,7 +2,7 @@ import scipy.sparse as sp
 from pathlib import Path
 
 # Chemins
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 MATRIX_PATH = PROJECT_ROOT / "data" / "processed" / "features_matrix.npz"
 
 def inspect_matrix():
