@@ -1,4 +1,17 @@
+---
+title: RecFlix Two-Tower Recommender
+emoji: 🎬
+colorFrom: red
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+short_description: Recommandation de films Two-Tower (MovieLens 1M)
+license: mit
+---
+
 # RecFlix - Système de Recommandation de Films
+
 
 Ce document regroupe toutes les commandes utiles pour lancer et travailler sur le projet **RecFlix** en utilisant Docker. L'utilisation de Docker te permet de ne pas te soucier des versions de Python installées sur ta machine locale.
 

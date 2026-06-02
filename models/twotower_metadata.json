@@ -1,0 +1,56 @@
+{
+    "genres": [
+        "Action",
+        "Adventure",
+        "Animation",
+        "Children's",
+        "Comedy",
+        "Crime",
+        "Documentary",
+        "Drama",
+        "Fantasy",
+        "Film-Noir",
+        "Horror",
+        "Musical",
+        "Mystery",
+        "Romance",
+        "Sci-Fi",
+        "Thriller",
+        "War",
+        "Western"
+    ],
+    "decades": [
+        "1910s",
+        "1920s",
+        "1930s",
+        "1940s",
+        "1950s",
+        "1960s",
+        "1970s",
+        "1980s",
+        "1990s",
+        "2000s"
+    ],
+    "user_stats_normalization": {
+        "mean_rating": 3.7039636952244086,
+        "std_rating": 0.436801392395031,
+        "mean_count": 132.47814569536425,
+        "std_count": 154.33470676160087
+    },
+    "movie_stats_normalization": {
+        "mean_rating": 3.2436831036009215,
+        "std_rating": 0.6758279825999907,
+        "mean_count": 217.25984251968504,
+        "std_count": 307.3376239379368
+    },
+    "global_mean_rating": 3.581347916937443,
+    "age_categories": [
+        1,
+        18,
+        25,
+        35,
+        45,
+        50,
+        56
+    ]
+}

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecFlix V2 - Moteur de Recommandation Profond</title>
+    <!-- Fonts Google : Outfit pour les titres, Inter pour le corps de texte -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="stars-overlay"></div>
+    <div class="glow-radial"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header animate-fade-in">
+            <div class="logo">
+                <span class="logo-red">Rec</span><span class="logo-white">Flix</span>
+                <span class="badge-v2">V2 Two-Tower</span>
+            </div>
+            <p class="subtitle">Système de recommandation profond entraîné sur MovieLens 1M</p>
+        </header>
+
+        <!-- ZONE D'AUTHENTIFICATION & INSCRIPTION (ÉCRAN 1) -->
+        <main id="auth-panel" class="auth-panel animate-scale-up">
+            <div class="tabs-container">
+                <button id="tab-login" class="tab-btn active">Se connecter</button>
+                <button id="tab-signup" class="tab-btn">Nouveau Profil (Cold Start)</button>
+            </div>
+
+            <!-- FORMULAIRE DE CONNEXION -->
+            <div id="login-section" class="form-section active">
+                <h2>Connexion à votre espace</h2>
+                <p class="form-desc">Saisissez votre ID utilisateur MovieLens (1 à 6040) ou votre pseudonyme personnalisé créé précédemment.</p>
+                
+                <div class="input-group">
+                    <label for="user-id-input">ID MovieLens ou Pseudo personnalisé</label>
+                    <input type="text" id="user-id-input" placeholder="Exemples : 487 ou JeanCinema" required>
+                    <span class="input-hint">Restaure vos préférences et vos notations</span>
+                </div>
+                
+                <button id="btn-submit-login" class="btn btn-primary">
+                    <span>Accéder aux recommandations</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+
+            <!-- FORMULAIRE DE CRÉATION DE PROFIL (COLD START) -->
+            <div id="signup-section" class="form-section">
+                <h2>Créer un profil personnalisé</h2>
+                <p class="form-desc">Renseignez vos critères sociodémographiques et vos films favoris pour générer instantanément votre vecteur d'embeddings.</p>
+                
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label for="username-input">Nom d'utilisateur (requis pour les commentaires)</label>
+                    <input type="text" id="username-input" placeholder="Exemple : Cinephile99" required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="select-gender">Genre</label>
+                        <select id="select-gender">
+                            <option value="F">Femme</option>
+                            <option value="M" selected>Homme</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="select-age">Tranche d'âge</label>
+                        <select id="select-age">
+                            <!-- Rempli par l'API -->
+                        </select>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label for="select-occupation">Profession</label>
+                        <select id="select-occupation">
+                            <!-- Rempli par l'API -->
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="zip-input">Code Postal</label>
+                        <input type="text" id="zip-input" maxlength="5" placeholder="Ex: 90210" value="75001">
+                        <span class="input-hint">Seul le 1er chiffre sera indexé</span>
+                    </div>
+                </div>
+
+                <!-- RECHERCHE ET PROFILAGE DE FILMS AIMÉS -->
+                <div class="profiling-section">
+                    <h3>Quels films aimez-vous ? (Facultatif mais très recommandé)</h3>
+                    <p class="section-desc">Recherchez et sélectionnez des films pour construire votre profil de goûts en temps réel.</p>
+                    
+                    <div class="search-box-container">
+                        <input type="text" id="search-movie-input" placeholder="Rechercher un film... (ex: Toy Story, Matrix, Jurassic...)" autocomplete="off">
+                        <div id="search-results-dropdown" class="results-dropdown"></div>
+                    </div>
+
+                    <!-- Liste des films sélectionnés -->
+                    <div id="selected-movies-container" class="selected-tags-container"></div>
+
+                    <!-- Suggestions rapides -->
+                    <div class="popular-suggestions">
+                        <h4>Suggestions populaires :</h4>
+                        <div id="popular-movies-container" class="popular-tags-list">
+                            <!-- Rempli par l'API -->
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-submit-signup" class="btn btn-secondary">
+                    <span>Générer mes recommandations</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+        </main>
+
+        <!-- ZONE DE CHARGEMENT (LOADER) -->
+        <div id="loader-panel" class="loader-panel hidden">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-glow"></div>
+            </div>
+            <h3>Calcul vectoriel en cours...</h3>
+            <p>La Tour Utilisateur projette votre profil dans l'espace commun MPS.</p>
+        </div>
+
+        <!-- ZONE DES RECOMMANDATIONS (ÉCRAN 2) -->
+        <main id="recommendations-panel" class="recommendations-panel hidden">
+            <div class="results-header animate-fade-in">
+                <div class="profile-summary-card">
+                    <div class="avatar-circle">👤</div>
+                    <div class="profile-details">
+                        <h3 id="recs-title">Recommandations personnalisées</h3>
+                        <p id="recs-subtitle">Profil chargé</p>
+                    </div>
+                </div>
+                <button id="btn-logout" class="btn btn-outline">Changer de profil</button>
+            </div>
+
+            <!-- Grille de films recommandés -->
+            <div id="movies-grid" class="movies-grid">
+                <!-- Les cartes de films seront insérées dynamiquement -->
+            </div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <p>&copy; 2026 RecFlix Inc. - MLOps Pipeline & Vector Retrieval Engine</p>
+        </footer>
+    </div>
+
+    <!-- MODAL DETAILS FILM -->
+    <div id="movie-detail-modal" class="modal-overlay hidden">
+        <div class="modal-content animate-scale-up">
+            <button id="modal-close-btn" class="modal-close">&times;</button>
+            <div class="modal-body">
+                <div class="modal-left">
+                    <img id="modal-movie-poster" src="" alt="Affiche du film">
+                </div>
+                <div class="modal-right">
+                    <h2 id="modal-movie-title">Titre du Film</h2>
+                    <div class="modal-meta">
+                        <span id="modal-movie-year" class="movie-year">Année</span>
+                        <div id="modal-movie-genres" class="movie-genres-container"></div>
+                    </div>
+                    <p class="modal-label"><strong>Réalisateur :</strong> <span id="modal-movie-director">-</span></p>
+                    <p class="modal-label"><strong>Acteurs :</strong> <span id="modal-movie-cast">-</span></p>
+                    <div class="modal-overview-section">
+                        <h3>Synopsis</h3>
+                        <p id="modal-movie-overview">Résumé du film...</p>
+                    </div>
+                    
+                    <!-- Section des commentaires -->
+                    <div class="modal-comments-section">
+                        <h3>Commentaires de la communauté</h3>
+                        <div id="modal-comments-list" class="comments-list">
+                            <!-- Les commentaires seront affichés ici -->
+                        </div>
+                        
+                        <!-- Formulaire de commentaire -->
+                        <form id="comment-form" class="comment-form">
+                            <textarea id="comment-input" placeholder="Ajouter un commentaire..." required></textarea>
+                            <button type="submit" class="btn btn-primary compact-btn">Publier</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
